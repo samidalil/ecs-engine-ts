@@ -1,26 +1,50 @@
+import EventEmitter from "../utils/EventEmitter";
 import ComponentManager from "./ComponentManager";
-import { Components } from "./components/types";
+import { TimeComponent } from "./components";
+import { Component, Components } from "./components/types";
 import Entity from "./Entity";
 import EntityManager from "./EntityManager";
 import SystemManager from "./SystemManager";
-import { Component, IEngine, System } from "./types";
+import { ClockSystem } from "./systems";
+import { System } from "./systems/types";
+import { IEngine } from "./types";
 
-class Engine implements IEngine {
+class Engine extends EventEmitter implements IEngine {
+  public constructor(public requiredFrameRate = 60) {
+    super();
+    this.frameDuration = 1000 / requiredFrameRate;
+    this.registerSystem(new ClockSystem());
+    this.createEntity().addComponent(this.time);
+  }
+
+  /** Managers */
+
   public readonly componentManager: ComponentManager = new ComponentManager(
     this
   );
   public readonly entityManager: EntityManager = new EntityManager(this, 200);
   public readonly systemManager: SystemManager = new SystemManager(this);
 
-  private frameRate = 1000;
-  private promise: Promise<any> = Promise.resolve();
-  private running = false;
+  /** Data */
+
+  private readonly frameDuration: number;
+  public readonly time: TimeComponent = new TimeComponent();
 
   /** Entity Management */
 
-  public createEntity = () => this.entityManager.create();
+  public createEntity = () => {
+    const entity = this.entityManager.create();
 
-  public destroyEntity = (entity: Entity) => this.entityManager.destroy(entity);
+    this.emit("entityCreated", entity);
+    return entity;
+  };
+
+  public destroyEntity = (entity: Entity) => {
+    Object.values(entity.getAllComponents()).forEach((component) =>
+      this.removeComponentOfEntity(entity, component.componentType)
+    );
+    this.entityManager.destroy(entity);
+  };
 
   public getAllComponentsOfEntity = (entity: Entity) =>
     this.entityManager.getAllComponents(entity);
@@ -60,29 +84,13 @@ class Engine implements IEngine {
   public registerSystem = (system: System) =>
     this.systemManager.register(system);
 
-  /** Loop */
+  /** Tick */
 
-  private waitForFrame = () =>
+  public tick = () =>
     Promise.all([
-      new Promise(res => setTimeout(res, this.frameRate, null)),
+      new Promise((res) => setTimeout(res, this.frameDuration, null)),
       this.systemManager.run(),
-    ])
-
-
-  public run = async () => {
-    if (this.running) return;
-
-    this.running = true;
-
-    while (this.running) {
-      await (this.promise = this.waitForFrame());
-    }
-  };
-
-  public stop = async () => {
-    this.running = false;
-    await this.promise;
-  };
+    ]);
 }
 
 export default Engine;

@@ -1,13 +1,8 @@
-import { Transform } from "./engine/components/Transform";
-import Engine from "./engine/Engine";
-import MoveSystem from "./engine/systems/MoveSystem";
+import Game from "./game";
+import NetworkManager from "./networking";
 
-const engine = new Engine();
+const game = new Game();
+const networkManager = new NetworkManager(game);
 
-engine.registerSystem(new MoveSystem());
-
-const entity = engine.createEntity();
-
-entity.addComponent(new Transform("Testtest"));
-
-engine.run();
+game.run();
+networkManager.listen();

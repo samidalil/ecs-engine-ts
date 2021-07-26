@@ -16,6 +16,11 @@ class EventEmitter {
       if (~index) this.listeners[event].splice(index, 1);
     }
   };
+
+  emit = (event: string, ...args: any[]) => {
+    if (!(event in this.listeners)) return;
+    this.listeners[event].forEach((listener) => listener(...args));
+  };
 }
 
 export default EventEmitter;

@@ -1,9 +1,9 @@
 import assert from "../utils/assert";
 import Stack from "../utils/Stack";
 
-import { Components } from "./components/types";
+import { Component, Components } from "./components/types";
 import Entity from "./Entity";
-import { Component, EntityComponents, IEngine, IEntityManager } from "./types";
+import { EntityComponents, IEngine, IEntityManager } from "./types";
 
 class EntityManager implements IEntityManager {
   constructor(
@@ -16,7 +16,7 @@ class EntityManager implements IEntityManager {
 
     for (let i = 0; i < maxEntitiesCount; i++) {
       this.availableEntities.push(new Entity(i, this.engine));
-      this.entityComponentsArray[i] = {} as EntityComponents;
+      this.entityComponentsArray[i] = {};
       this.entitySignatures[i] = Components.None;
     }
   }
@@ -72,7 +72,7 @@ class EntityManager implements IEntityManager {
     this.entitySignatures[entity.id];
 
   public hasComponents = (entity: Entity, componentTypes: Components) =>
-    (this.entitySignatures[entity.id] & componentTypes) !== Components.None;
+    (this.entitySignatures[entity.id] & componentTypes) === componentTypes;
 
   public removeComponent = (entity: Entity, componentType: Components) => {
     assert(

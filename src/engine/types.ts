@@ -1,8 +1,7 @@
-import { Transform } from "./components/Transform";
-import { Components } from "./components/types";
-import MoveSystem from "./systems/MoveSystem";
-
-export type Component = Transform;
+import EventEmitter from "../utils/EventEmitter";
+import { TimeComponent } from "./components";
+import { Component, Components } from "./components/types";
+import { System } from "./systems/types";
 
 export type EntityId = number;
 
@@ -34,16 +33,17 @@ export interface IComponentManager {
 }
 
 export interface ISystem<T extends Component[]> {
-  readonly componentTypes: Components;
   readonly componentTypeArray: Components[];
 
-  addEntity(entity: IEntity);
-  behaviour(entity: IEntity, components: T): any | Promise<any>;
-  removeEntity(entity: IEntity);
-  run(): any | Promise<any>;
+  addEntity(entity: IEntity): void;
+  behaviour(
+    entity: IEntity,
+    components: T,
+    engine: IEngine
+  ): any | Promise<any>;
+  removeEntity(entity: IEntity): void;
+  run(engine: IEngine): any | Promise<any>;
 }
-
-export type System = MoveSystem;
 
 export interface ISystemManager {
   onEntityComponentAdded(
@@ -55,12 +55,14 @@ export interface ISystemManager {
     previousComponentTypes: Components
   ): void;
   register(system: System): void;
+  run(): Promise<void>;
 }
 
-export interface IEngine {
+export interface IEngine extends EventEmitter {
   readonly componentManager: IComponentManager;
   readonly entityManager: IEntityManager;
   readonly systemManager: ISystemManager;
+  readonly time: TimeComponent;
 
   addComponentToEntity(entity: IEntity, component: Component): void;
   getAllComponentsOfEntity(entity: IEntity): EntityComponents;
@@ -69,6 +71,5 @@ export interface IEngine {
   hasEntityComponents(entity: IEntity, componentTypes: Components): boolean;
   registerSystem(system: System): void;
   removeComponentOfEntity(entity: IEntity, componentType: Components): void;
-  run(): Promise<void>;
-  stop(): Promise<void>;
+  tick(): Promise<any>;
 }

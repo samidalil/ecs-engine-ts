@@ -1,5 +1,5 @@
-import { Components } from "./components/types";
-import { Component, EntityId, IEngine, IEntity } from "./types";
+import { Component, Components } from "./components/types";
+import { EntityId, IEngine, IEntity } from "./types";
 
 class Entity implements IEntity {
   public constructor(

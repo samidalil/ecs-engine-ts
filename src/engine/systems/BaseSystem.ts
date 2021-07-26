@@ -1,26 +1,31 @@
 import assert from "../../utils/assert";
-import { Components } from "../components/types";
+import { Component, Components } from "../components/types";
+import Engine from "../Engine";
 import Entity from "../Entity";
-import { Component, ISystem } from "../types";
+import { ISystem } from "../types";
 
 abstract class BaseSystem<T extends Component[]> implements ISystem<T> {
-  public abstract readonly componentTypes: Components;
-  public abstract readonly componentTypeArray: Components[];
+  public readonly componentTypeArray: Components[] = [];
   private readonly entities: Entity[] = [];
 
   /** System Methods */
 
-  public abstract behaviour(entity: Entity, components: T): any | Promise<any>;
+  public abstract behaviour(
+    entity: Entity,
+    components: T,
+    engine: Engine
+  ): any | Promise<any>;
 
   /**
    * Run behaviour for every entity
    * @param entities Entities with same component signature as the system
    */
-  public run = () => {
+  public run = (engine: Engine) => {
     const promises: any[] = this.entities.map((entity) =>
       this.behaviour(
         entity,
-        this.componentTypeArray.map(entity.getComponent) as T
+        this.componentTypeArray.map(entity.getComponent) as T,
+        engine
       )
     );
 

@@ -15,7 +15,7 @@ class Stack<T> {
   pop = () => {
     assert(this.content.length > 0, "No elements in stack");
 
-    return this.content.pop();
+    return this.content.pop() as T;
   };
 
   top = () => this.content[this.content.length - 1];

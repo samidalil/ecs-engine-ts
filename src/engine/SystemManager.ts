@@ -1,11 +1,13 @@
 import { Components } from "./components/types";
+import Engine from "./Engine";
 import Entity from "./Entity";
-import { IEngine, ISystemManager, System } from "./types";
+import { System } from "./systems/types";
+import { ISystemManager } from "./types";
 
 type ComponentTypesSystemMap = Record<Components, System[]>;
 
 class SystemManager implements ISystemManager {
-  constructor(public engine: IEngine) {}
+  constructor(public engine: Engine) {}
 
   private readonly componentTypesToSystemMap: ComponentTypesSystemMap = {};
   private readonly systems: System[] = [];
@@ -20,8 +22,8 @@ class SystemManager implements ISystemManager {
       const value = +key;
 
       if (
-        (componentTypes & value) !== Components.None &&
-        (previousComponentTypes & value) === Components.None
+        (componentTypes & value) === value &&
+        (previousComponentTypes & value) !== value
       )
         this.componentTypesToSystemMap[key].forEach((system) =>
           system.addEntity(entity)
@@ -39,8 +41,8 @@ class SystemManager implements ISystemManager {
       const value = +key;
 
       if (
-        (previousComponentTypes & value) !== Components.None &&
-        (componentTypes & value) === Components.None
+        (previousComponentTypes & value) === value &&
+        (componentTypes & value) !== value
       )
         this.componentTypesToSystemMap[key].forEach((system) =>
           system.removeEntity(entity)
@@ -51,16 +53,20 @@ class SystemManager implements ISystemManager {
   /** Register system before creating entities */
   public register = (system: System) => {
     this.systems.push(system);
+    const componentTypes = system.componentTypeArray.reduce(
+      (acc, value) => acc | value,
+      Components.None
+    );
 
-    if (!(system.componentTypes in this.componentTypesToSystemMap))
-      this.componentTypesToSystemMap[system.componentTypes] = [];
+    if (!(componentTypes in this.componentTypesToSystemMap))
+      this.componentTypesToSystemMap[componentTypes] = [];
 
-    this.componentTypesToSystemMap[system.componentTypes].push(system);
+    this.componentTypesToSystemMap[componentTypes].push(system);
   };
 
   public run = async () => {
     for (const system of this.systems) {
-      await system.run();
+      await system.run(this.engine);
     }
   };
 }

@@ -1,4 +1,5 @@
-import { createServer } from "http";
+import express from "express";
+import { createServer, Server } from "http";
 import SIO from "socket.io";
 
 import * as ECS from "../engine";
@@ -14,12 +15,17 @@ class NetworkManager implements INetworkManager {
   public constructor(
     public game: Game,
     public reliableFrames = game.engine.requiredFrameRate * 2
-  ) {}
+  ) {
+    this.expressApp = express();
+    this.httpServer = createServer(this.expressApp);
+    this.socketServer = new SIO.Server(this.httpServer, { cors: {} });
+  }
 
   /** Services */
 
-  private httpServer = createServer();
-  private socketServer = new SIO.Server(this.httpServer, { cors: {} });
+  private expressApp;
+  private httpServer: Server;
+  private socketServer: SIO.Server;
 
   /** Data */
 
@@ -32,6 +38,10 @@ class NetworkManager implements INetworkManager {
 
   public listen = (port = 3000) => {
     this.setup();
+    this.expressApp.get("/", (req, res) => {
+      console.log("Aiming root");
+      res.send("Test");
+    });
     this.httpServer.listen(port, () =>
       console.log(`Listening to port ${port}`)
     );
@@ -89,7 +99,7 @@ class NetworkManager implements INetworkManager {
   };
 
   private onEntityCreated = (entity: ECS.Entity) => {
-    
+
   };
 
   private setup = () => {

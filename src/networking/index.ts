@@ -115,6 +115,7 @@ class NetworkManager implements INetworkManager {
       console.log("Client connected");
       const entity = this.game.addPlayer(this);
 
+      socket.emit("init", { id: entity.id });
       socket.emit("state", {
         data: this.state,
         frame: this.previousFrame,

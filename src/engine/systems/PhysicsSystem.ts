@@ -17,7 +17,7 @@ class PhysicsSystem extends BaseSystem<[TransformComponent, PhysicsComponent]> {
     [transform, physics]: [TransformComponent, PhysicsComponent],
     engine: Engine
   ) => {
-    const deltaVelocity = physics.velocity.copy().multiply(engine.time.delta);
+    const deltaVelocity = physics.velocity.copy().multiply(engine.time.delta / 1000);
 
     transform.position.add(deltaVelocity);
     physics.velocity.subtract(deltaVelocity);

@@ -5,7 +5,7 @@ import { INetworkManager } from "../networking/types";
 import { IGame } from "./types";
 
 class Game implements IGame {
-  public engine = new ECS.Engine(1);
+  public engine = new ECS.Engine(60);
   public players: ECS.Entity[] = [];
 
   public addPlayer = (server: INetworkManager) => {

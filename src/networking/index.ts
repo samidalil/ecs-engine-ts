@@ -1,51 +1,39 @@
-import express from "express";
-import { createServer, Server } from "http";
-import SIO from "socket.io";
-
 import * as ECS from "../engine";
 import { isAction } from "../engine/components/ActionComponent";
-import { Component } from "../engine/components/types";
-import { EntityComponents } from "../engine/types";
+import { Component, Components } from "../engine/components/types";
 import Game from "../game";
+import SocketServer from "./SocketServer";
 import { INetworkManager } from "./types";
 
-type StateMap = Record<ECS.Entity["id"], EntityComponents>;
+type StateMap = {
+  id: ECS.Entity["id"],
+  components: {
+    id: Components,
+    data: Component,
+  }[],
+}[];
 
 class NetworkManager implements INetworkManager {
   public constructor(
     public game: Game,
     public reliableFrames = game.engine.requiredFrameRate * 2
   ) {
-    this.expressApp = express();
-    this.httpServer = createServer(this.expressApp);
-    this.socketServer = new SIO.Server(this.httpServer, { cors: {} });
+    this.socketServer = new SocketServer();
+    this.setup();
   }
 
   /** Services */
 
-  private expressApp;
-  private httpServer: Server;
-  private socketServer: SIO.Server;
+  private socketServer: SocketServer;
 
   /** Data */
 
   private previousFrame = 0;
 
-  private diff: StateMap = {};
-  private state: StateMap = {};
+  private diff: StateMap = [];
+  private state: StateMap = [];
 
   /** Public Methods */
-
-  public listen = (port = 3000) => {
-    this.setup();
-    this.expressApp.get("/", (req, res) => {
-      console.log("Aiming root");
-      res.send("Test");
-    });
-    this.httpServer.listen(port, () =>
-      console.log(`Listening to port ${port}`)
-    );
-  };
 
   private assign = (
     object: StateMap,
@@ -53,14 +41,30 @@ class NetworkManager implements INetworkManager {
     component: Component
   ) => {
     const { componentType, ...data } = component;
+    let entityIndex = object.findIndex(data => key === data.id);
 
-    if (!(key in object)) object[key] = {};
-    if (!(componentType in object[key]))
-      object[key][componentType] = {} as Component;
-    object[key][componentType] = {
-      ...object[key][componentType],
+    if (entityIndex === -1) {
+      entityIndex = object.length;
+      object.push({
+        id: key,
+        components: [],
+      });
+    }
+
+    let componentIndex = object[entityIndex].components.findIndex(data => componentType === data.id);
+
+    if (componentIndex === -1) {
+      componentIndex = object[entityIndex].components.length;
+      object[entityIndex].components.push({
+        id: componentType,
+        data: {} as Component,
+      });
+    }
+
+    object[entityIndex].components[componentIndex].data = {
       ...data,
-    };
+      ...object[entityIndex].components[componentIndex].data,
+    }
   };
 
   public prepare = (entity: ECS.Entity, components: Component[]) => {
@@ -76,7 +80,7 @@ class NetworkManager implements INetworkManager {
       else this.emitDiff();
 
       this.previousFrame = frame;
-      this.diff = {};
+      this.diff = [];
     }
   };
 
@@ -99,7 +103,9 @@ class NetworkManager implements INetworkManager {
   };
 
   private onEntityCreated = (entity: ECS.Entity) => {
-
+    this.socketServer.emit("entityCreated", {
+      id: entity.id,
+    });
   };
 
   private setup = () => {
@@ -114,11 +120,10 @@ class NetworkManager implements INetworkManager {
         frame: this.previousFrame,
       });
       socket.on("action", (action: any) => {
-        if (isAction(+action)) {
-          this.game.applyAction(entity, +action);
+        if (isAction(action)) {
+          this.game.applyAction(entity, action);
         }
       });
-      socket.emit("say_hi", { msg: "test" });
       socket.on("disconnect", () => this.game.removePlayer(entity));
     });
   };

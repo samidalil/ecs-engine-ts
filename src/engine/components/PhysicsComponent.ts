@@ -6,7 +6,7 @@ class PhysicsComponent implements IComponent {
 
   public velocity = new Vector3();
   public useGravity = true;
-  public speed = new Vector3(2, 10, 2);
+  public speed = new Vector3(0.3, 10, 0.3);
   public gravityForce = 9.81;
   public friction = 3;
 }

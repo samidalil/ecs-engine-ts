@@ -1,5 +1,5 @@
 import { Vector3 } from "../../lib/math";
-import { INetworkManager } from "../../networking/types";
+import { INetworkManager, NetworkEventType } from "../../networking/types";
 import Entity from "../Entity";
 import TransformComponent from "./TransformComponent";
 import { Components, IComponent } from "./types";
@@ -14,7 +14,7 @@ class NetworkComponent implements IComponent {
     entity: Entity,
     transform: TransformComponent
   ) => {
-    this.server.prepare(entity, [transform]);
+    this.server.prepare(entity, [transform], NetworkEventType.MODIFIED);
     this.position = transform.position.copy();
   };
 

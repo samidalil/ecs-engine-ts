@@ -1,8 +1,15 @@
 import * as ECS from "../engine";
 import { Component, Components } from "../engine/components/types";
 
+export enum NetworkEventType {
+  NONE,
+  CREATED,
+  MODIFIED,
+  REMOVED,
+};
+
 export interface INetworkManager {
-  prepare(entity: ECS.Entity, components: Component[]): void;
+  prepare(entity: ECS.Entity, components: Component[], eventType: NetworkEventType): void;
   send(frame: number): void;
 }
 
@@ -19,7 +26,7 @@ export interface EntityInfo {
 export type StateMap = EntityInfo[];
 
 export interface EntityDiffInfo extends EntityInfo {
-  eventType: "CREATED" | "MODIFIED" | "REMOVED";
+  eventType: NetworkEventType;
 }
 
 export type DiffMap = EntityDiffInfo[];

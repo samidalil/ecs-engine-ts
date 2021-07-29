@@ -3,7 +3,7 @@ import { isAction } from "../engine/components/ActionComponent";
 import { Component, Components } from "../engine/components/types";
 import Game from "../game";
 import SocketServer from "./SocketServer";
-import { DiffMap, INetworkManager, StateMap } from "./types";
+import { DiffMap, INetworkManager, NetworkEventType, StateMap } from "./types";
 
 class NetworkManager implements INetworkManager {
   public constructor(
@@ -27,7 +27,7 @@ class NetworkManager implements INetworkManager {
 
   /** Public Methods */
 
-  private assign = (
+  private assignState = (
     object: StateMap,
     key: ECS.Entity["id"],
     component: Component
@@ -59,10 +59,46 @@ class NetworkManager implements INetworkManager {
     }
   };
 
-  public prepare = (entity: ECS.Entity, components: Component[]) => {
+  private assignDiff = (
+    object: DiffMap,
+    key: ECS.Entity["id"],
+    component: Component,
+    eventType: NetworkEventType,
+  ) => {
+    const { componentType, ...data } = component;
+    let entityIndex = object.findIndex(data => key === data.id);
+
+    if (~entityIndex) {
+      entityIndex = object.length;
+      object.push({
+        eventType: NetworkEventType.NONE,
+        id: key,
+        components: [],
+      });
+    } else {
+      object[entityIndex].eventType = eventType;
+    }
+
+    let componentIndex = object[entityIndex].components.findIndex(data => componentType === data.id);
+
+    if (~componentIndex) {
+      componentIndex = object[entityIndex].components.length;
+      object[entityIndex].components.push({
+        id: componentType,
+        data: {} as Component,
+      });
+    }
+
+    object[entityIndex].components[componentIndex].data = {
+      ...data,
+      ...object[entityIndex].components[componentIndex].data,
+    }
+  };
+
+  public prepare = (entity: ECS.Entity, components: Component[], eventType: NetworkEventType) => {
     components.forEach((component) => {
-      this.assign(this.diff, entity.id, component);
-      this.assign(this.state, entity.id, component);
+      this.assignDiff(this.diff, entity.id, component, eventType);
+      this.assignState(this.state, entity.id, component);
     });
   };
 
@@ -95,15 +131,18 @@ class NetworkManager implements INetworkManager {
   };
 
   private onEntityCreated = (entity: ECS.Entity) => {
-    this.socketServer.emit("entityCreated", {
-      id: entity.id,
-    });
+    if (entity.hasComponents(Components.Network))
+      Object.values(entity.getAllComponents()).forEach((component) => {
+        this.assignDiff(this.diff, entity.id, component, NetworkEventType.CREATED);
+        this.assignState(this.state, entity.id, component);
+      });
   };
 
   private onEntityDestroyed = (entity: ECS.Entity) => {
     if (entity.hasComponents(Components.Network))
-      this.socketServer.emit("entityRemoved", {
-        id: entity.id,
+      Object.values(entity.getAllComponents()).forEach((component) => {
+        this.assignDiff(this.diff, entity.id, component, NetworkEventType.REMOVED);
+        this.assignState(this.state, entity.id, component);
       });
   };
 
@@ -115,11 +154,11 @@ class NetworkManager implements INetworkManager {
       console.log("Client connected");
       const entity = this.game.addPlayer(this);
 
-      socket.emit("init", {
+      setTimeout(() => socket.emit("init", {
         assignedId: entity.id,
         data: this.state,
         frame: this.previousFrame,
-      });
+      }), 1000);
       socket.on("action", (action: any) => {
         if (isAction(action)) {
           this.game.applyAction(entity, action);

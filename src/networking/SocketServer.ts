@@ -14,6 +14,10 @@ class SocketServer {
   private id = 0;
   private wss: WebSocket.Server;
 
+  public onConnect = (listener: (arg: SocketClient) => void) => {
+    this.eventEmitter.on("connection", listener);
+  };
+
   public on = (event: string, listener: (arg: any) => void) => {
     this.eventEmitter.on(event, listener);
   };
@@ -28,6 +32,10 @@ class SocketServer {
       client.id = this.id++;
 
       this.clients.push(client);
+      client.on("close", () => {
+        const index = this.clients.indexOf(client);
+        if (~index) this.clients.splice(index, 1);
+      });
       this.eventEmitter.emit("connection", client);
     });
 

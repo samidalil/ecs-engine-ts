@@ -40,6 +40,7 @@ class Engine extends EventEmitter implements IEngine {
   };
 
   public destroyEntity = (entity: Entity) => {
+    this.emit("entityDestroyed", entity);
     Object.values(entity.getAllComponents()).forEach((component) =>
       this.removeComponentOfEntity(entity, component.componentType)
     );

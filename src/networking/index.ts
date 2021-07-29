@@ -1,6 +1,6 @@
 import * as ECS from "../engine";
 import { isAction } from "../engine/components/ActionComponent";
-import { Component } from "../engine/components/types";
+import { Component, Components } from "../engine/components/types";
 import Game from "../game";
 import SocketServer from "./SocketServer";
 import { DiffMap, INetworkManager, StateMap } from "./types";
@@ -35,7 +35,7 @@ class NetworkManager implements INetworkManager {
     const { componentType, ...data } = component;
     let entityIndex = object.findIndex(data => key === data.id);
 
-    if (entityIndex === -1) {
+    if (~entityIndex) {
       entityIndex = object.length;
       object.push({
         id: key,
@@ -45,7 +45,7 @@ class NetworkManager implements INetworkManager {
 
     let componentIndex = object[entityIndex].components.findIndex(data => componentType === data.id);
 
-    if (componentIndex === -1) {
+    if (~componentIndex) {
       componentIndex = object[entityIndex].components.length;
       object[entityIndex].components.push({
         id: componentType,
@@ -95,15 +95,24 @@ class NetworkManager implements INetworkManager {
   };
 
   private onEntityCreated = (entity: ECS.Entity) => {
-    this.socketServer.emit("entityCreated", {
-      id: entity.id,
-    });
+    if (entity.hasComponents(Components.Network))
+      this.socketServer.emit("entityCreated", {
+        id: entity.id,
+      });
+  };
+
+  private onEntityDestroyed = (entity: ECS.Entity) => {
+    if (entity.hasComponents(Components.Network))
+      this.socketServer.emit("entityRemoved", {
+        id: entity.id,
+      });
   };
 
   private setup = () => {
     this.game.engine.on("entityCreated", this.onEntityCreated);
+    this.game.engine.on("entityDestroyed", this.onEntityDestroyed);
 
-    this.socketServer.on("connection", (socket) => {
+    this.socketServer.onConnect((socket) => {
       console.log("Client connected");
       const entity = this.game.addPlayer(this);
 
@@ -117,7 +126,7 @@ class NetworkManager implements INetworkManager {
           this.game.applyAction(entity, action);
         }
       });
-      socket.on("disconnect", () => this.game.removePlayer(entity));
+      socket.on("close", () => this.game.removePlayer(entity));
     });
   };
 }

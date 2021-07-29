@@ -9,12 +9,12 @@ class Game implements IGame {
   public players: ECS.Entity[] = [];
 
   public addPlayer = (server: INetworkManager) => {
-    const entity = this.engine.createEntity();
-
-    entity.addComponent(new ECS.components.ActionComponent());
-    entity.addComponent(new ECS.components.PhysicsComponent());
-    entity.addComponent(new ECS.components.TransformComponent());
-    entity.addComponent(new ECS.components.NetworkComponent(server));
+    const entity = this.engine.createEntity([
+      new ECS.components.ActionComponent(),
+      new ECS.components.PhysicsComponent(),
+      new ECS.components.TransformComponent(),
+      new ECS.components.NetworkComponent(server),
+    ]);
 
     this.players.push(entity);
     return entity;

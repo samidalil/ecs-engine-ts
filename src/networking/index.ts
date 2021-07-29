@@ -95,10 +95,9 @@ class NetworkManager implements INetworkManager {
   };
 
   private onEntityCreated = (entity: ECS.Entity) => {
-    if (entity.hasComponents(Components.Network))
-      this.socketServer.emit("entityCreated", {
-        id: entity.id,
-      });
+    this.socketServer.emit("entityCreated", {
+      id: entity.id,
+    });
   };
 
   private onEntityDestroyed = (entity: ECS.Entity) => {

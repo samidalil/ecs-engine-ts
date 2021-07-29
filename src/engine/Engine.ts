@@ -32,9 +32,12 @@ class Engine extends EventEmitter implements IEngine {
 
   /** Entity Management */
 
-  public createEntity = () => {
+  public createEntity = (components: Component[] = []) => {
     const entity = this.entityManager.create();
 
+    components.forEach((component) =>
+      this.addComponentToEntity(entity, component)
+    );
     this.emit("entityCreated", entity);
     return entity;
   };

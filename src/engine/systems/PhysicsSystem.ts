@@ -23,8 +23,10 @@ class PhysicsSystem extends BaseSystem<[TransformComponent, PhysicsComponent]> {
 
     transform.position.add(deltaVelocity);
     physics.velocity.subtract(deltaVelocity);
-    if (transform.position.y < 0)
+    if (transform.position.y < 0) {
       transform.position.y = 0;
+      physics.velocity.y = 0;
+    }
 
     if (physics.velocity.sqrMagnitude < 0.000001)
       physics.velocity = Vector3.zero();

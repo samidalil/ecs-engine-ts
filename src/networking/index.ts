@@ -35,7 +35,7 @@ class NetworkManager implements INetworkManager {
     const { componentType, ...data } = component;
     let entityIndex = object.findIndex(data => key === data.id);
 
-    if (~entityIndex) {
+    if (!(~entityIndex)) {
       entityIndex = object.length;
       object.push({
         id: key,
@@ -45,7 +45,7 @@ class NetworkManager implements INetworkManager {
 
     let componentIndex = object[entityIndex].components.findIndex(data => componentType === data.id);
 
-    if (~componentIndex) {
+    if (!(~componentIndex)) {
       componentIndex = object[entityIndex].components.length;
       object[entityIndex].components.push({
         id: componentType,

@@ -122,8 +122,7 @@ class NetworkManager implements INetworkManager {
   };
 
   private emitState = () => {
-    console.log(this.state);
-    if (Object.keys(this.diff).length > 0)
+    if (Object.keys(this.state).length > 0)
       this.socketServer.emit("state", {
         data: this.state,
         frame: this.previousFrame,

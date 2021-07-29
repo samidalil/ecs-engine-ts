@@ -25,7 +25,8 @@ class ActionSystem extends BaseSystem<[ActionComponent, PhysicsComponent]> {
         physics.velocity.z += 2;
         break;
       case Action.JUMP:
-        physics.velocity.y += 10;
+        if (physics.velocity.y === 0)
+          physics.velocity.y += 10;
         break;
     }
   };

@@ -68,20 +68,19 @@ class NetworkManager implements INetworkManager {
     const { componentType, ...data } = component;
     let entityIndex = object.findIndex(data => key === data.id);
 
-    if (~entityIndex) {
+    if (!(~entityIndex)) {
       entityIndex = object.length;
       object.push({
         eventType: NetworkEventType.NONE,
         id: key,
         components: [],
       });
-    } else {
-      object[entityIndex].eventType = eventType;
     }
+    object[entityIndex].eventType = eventType;
 
     let componentIndex = object[entityIndex].components.findIndex(data => componentType === data.id);
 
-    if (~componentIndex) {
+    if (!(~componentIndex)) {
       componentIndex = object[entityIndex].components.length;
       object[entityIndex].components.push({
         id: componentType,

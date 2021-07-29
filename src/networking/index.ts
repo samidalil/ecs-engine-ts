@@ -59,6 +59,14 @@ class NetworkManager implements INetworkManager {
     }
   };
 
+  private removeFromState = (id: ECS.Entity["id"]) => {
+    let entityIndex = this.state.findIndex(data => id === data.id);
+
+    if (~entityIndex) {
+      this.state.splice(entityIndex, 1);
+    }
+  };
+
   private assignDiff = (
     object: DiffMap,
     key: ECS.Entity["id"],
@@ -122,17 +130,16 @@ class NetworkManager implements INetworkManager {
   };
 
   private emitState = () => {
-    if (Object.keys(this.state).length > 0)
-      this.socketServer.emit("state", {
-        data: this.state,
-        frame: this.previousFrame,
-      });
+    this.socketServer.emit("state", {
+      data: this.state,
+      frame: this.previousFrame,
+    });
   };
 
   private onEntityCreated = (entity: ECS.Entity) => {
     if (entity.hasComponents(Components.Network)) {
       const component = entity.getComponent(Components.Transform);
-      
+
       this.assignDiff(this.diff, entity.id, component, NetworkEventType.CREATED);
       this.assignState(this.state, entity.id, component);
     }
@@ -143,7 +150,7 @@ class NetworkManager implements INetworkManager {
       const component = entity.getComponent(Components.Transform);
 
       this.assignDiff(this.diff, entity.id, component, NetworkEventType.REMOVED);
-      this.assignState(this.state, entity.id, component);
+      this.removeFromState(entity.id);
     }
   };
 

@@ -122,6 +122,7 @@ class NetworkManager implements INetworkManager {
   };
 
   private emitState = () => {
+    console.log(this.state);
     if (Object.keys(this.diff).length > 0)
       this.socketServer.emit("state", {
         data: this.state,
@@ -130,19 +131,21 @@ class NetworkManager implements INetworkManager {
   };
 
   private onEntityCreated = (entity: ECS.Entity) => {
-    if (entity.hasComponents(Components.Network))
-      Object.values(entity.getAllComponents()).forEach((component) => {
-        this.assignDiff(this.diff, entity.id, component, NetworkEventType.CREATED);
-        this.assignState(this.state, entity.id, component);
-      });
+    if (entity.hasComponents(Components.Network)) {
+      const component = entity.getComponent(Components.Transform);
+      
+      this.assignDiff(this.diff, entity.id, component, NetworkEventType.CREATED);
+      this.assignState(this.state, entity.id, component);
+    }
   };
 
   private onEntityDestroyed = (entity: ECS.Entity) => {
-    if (entity.hasComponents(Components.Network))
-      Object.values(entity.getAllComponents()).forEach((component) => {
-        this.assignDiff(this.diff, entity.id, component, NetworkEventType.REMOVED);
-        this.assignState(this.state, entity.id, component);
-      });
+    if (entity.hasComponents(Components.Network)) {
+      const component = entity.getComponent(Components.Transform);
+
+      this.assignDiff(this.diff, entity.id, component, NetworkEventType.REMOVED);
+      this.assignState(this.state, entity.id, component);
+    }
   };
 
   private setup = () => {

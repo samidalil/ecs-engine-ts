@@ -1,4 +1,4 @@
-import Stack from "../../utils/Stack";
+import Queue from "../../utils/Queue";
 import { Components, IComponent } from "./types";
 
 export enum Action {
@@ -22,15 +22,15 @@ export const isAction = (maybeAction: any): maybeAction is Action =>
 class ActionComponent implements IComponent {
   public readonly componentType = Components.Action;
 
-  public actions = new Stack<Action>();
+  public actions = new Queue<Action>();
 
   public consume = () => {
     if (this.actions.size === 0) return Action.NONE;
-    return this.actions.pop();
+    return this.actions.dequeue();
   };
 
   public store = (action: Action) => {
-    if (action !== Action.NONE) this.actions.push(action);
+    if (action !== Action.NONE) this.actions.enqueue(action);
   };
 }
 

@@ -1,17 +1,9 @@
 import * as ECS from "../engine";
 import { isAction } from "../engine/components/ActionComponent";
-import { Component, Components } from "../engine/components/types";
+import { Component } from "../engine/components/types";
 import Game from "../game";
 import SocketServer from "./SocketServer";
-import { INetworkManager } from "./types";
-
-type StateMap = {
-  id: ECS.Entity["id"],
-  components: {
-    id: Components,
-    data: Component,
-  }[],
-}[];
+import { DiffMap, INetworkManager, StateMap } from "./types";
 
 class NetworkManager implements INetworkManager {
   public constructor(
@@ -30,7 +22,7 @@ class NetworkManager implements INetworkManager {
 
   private previousFrame = 0;
 
-  private diff: StateMap = [];
+  private diff: DiffMap = [];
   private state: StateMap = [];
 
   /** Public Methods */
@@ -115,8 +107,8 @@ class NetworkManager implements INetworkManager {
       console.log("Client connected");
       const entity = this.game.addPlayer(this);
 
-      socket.emit("init", { id: entity.id });
-      socket.emit("state", {
+      socket.emit("init", {
+        assignedId: entity.id,
         data: this.state,
         frame: this.previousFrame,
       });

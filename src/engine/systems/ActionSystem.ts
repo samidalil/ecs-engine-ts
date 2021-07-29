@@ -14,24 +14,20 @@ class ActionSystem extends BaseSystem<[ActionComponent, PhysicsComponent, Transf
   ) => {
     switch (action.consume()) {
       case Action.MOVE_LEFT:
-        //physics.velocity.x -= 2;
-        transform.rotation.y -= 1;
+        physics.velocity.x -= physics.speed.x;
         break;
       case Action.MOVE_RIGHT:
-        //physics.velocity.x += 2;np
-        transform.rotation.y += 1;
+        physics.velocity.x += physics.speed.x;
         break;
       case Action.MOVE_BACKWARD:
-        //physics.velocity.z -= 0.2;
-        transform.position.z -= 0.2;
+        physics.velocity.z -= physics.speed.z;
         break;
       case Action.MOVE_FORWARD:
-        //physics.velocity.z += 0.2;
-        transform.position.z += 0.2;
+        physics.velocity.z += physics.speed.z;
         break;
       case Action.JUMP:
         if (physics.velocity.y === 0)
-          physics.velocity.y += 10;
+          physics.velocity.y += physics.speed.y;
         break;
     }
   };

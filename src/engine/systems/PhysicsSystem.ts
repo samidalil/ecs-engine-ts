@@ -17,16 +17,17 @@ class PhysicsSystem extends BaseSystem<[TransformComponent, PhysicsComponent]> {
     [transform, physics]: [TransformComponent, PhysicsComponent],
     engine: Engine
   ) => {
-    const deltaVelocity = physics.velocity.copy().multiply(engine.time.delta);
-    if (transform.position.y > 0)
-      physics.velocity.y -= physics.gravityForce * engine.time.delta
-
-    transform.position.add(deltaVelocity);
-    physics.velocity.subtract(deltaVelocity);
     if (transform.position.y < 0) {
       transform.position.y = 0;
       physics.velocity.y = 0;
+    } else if (transform.position.y > 0) {
+      physics.velocity.y -= physics.gravityForce * engine.time.delta;
     }
+
+    const deltaVelocity = physics.velocity.copy().multiply(engine.time.delta);
+
+    transform.position.add(deltaVelocity);
+    physics.velocity.subtract(deltaVelocity.multiply(physics.friction));
 
     if (physics.velocity.sqrMagnitude < 0.000001)
       physics.velocity = Vector3.zero();

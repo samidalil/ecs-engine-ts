@@ -20,10 +20,11 @@ class SocketClient {
   };
 
   private setup = () => {
-    this.ws.on('message', (data) => {
+    this.ws.on("message", (data) => {
       const { eventName, arg } = JSON.parse(data as string);
       this.eventEmitter.emit(eventName, arg);
     });
+    this.ws.on("close", () => this.eventEmitter.emit("close"));
   };
 }
 

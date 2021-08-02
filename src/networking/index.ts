@@ -99,7 +99,7 @@ class NetworkManager implements INetworkManager {
     object[entityIndex].components[componentIndex].data = {
       ...data,
       ...object[entityIndex].components[componentIndex].data,
-    }
+    };
   };
 
   public prepare = (entity: ECS.Entity, components: Component[], eventType: NetworkEventType) => {
